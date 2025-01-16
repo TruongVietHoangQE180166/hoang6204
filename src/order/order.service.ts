@@ -10,9 +10,9 @@ export class OrderService {
   constructor(
     @InjectModel(Order.name) private orderModel: Model<Order>,
     @InjectModel(Product.name) private productModel: Model<Product>,
-  ) {}
+  ) { }
 
-  // Get order by ID
+
   async findOne(id: number): Promise<Order> {
     const order = await this.orderModel
       .findOne({ id })
@@ -27,7 +27,7 @@ export class OrderService {
     return order;
   }
 
-  // Get all orders with pagination
+
   async findAll(page: number, limit: number): Promise<{ data: Order[]; total: number }> {
     if (!Number.isInteger(page) || page < 1) {
       throw new BadRequestException('Page must be a positive integer');
@@ -53,50 +53,42 @@ export class OrderService {
     return { data, total };
   }
 
-  // Create new order
+
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
-    // Validate and update product quantities
     const productUpdates = [];
     let totalAmount = 0;
 
+
     for (const item of createOrderDto.products) {
-      const product = await this.productModel.findById({ _id: item.product });
-      
+      const product = await this.productModel.findById(item.product);
+
       if (!product) {
         throw new BadRequestException(
           `Product with ID ${item.product} not found`,
         );
       }
 
-      // Check if we have enough stock
       if (product.stock < item.quantity) {
         throw new BadRequestException(
           `Insufficient stock for product ${product.name || product._id}`,
         );
       }
 
-      // Prepare stock update
       productUpdates.push(
         this.productModel.updateOne(
-          { id: item.product },
+          { _id: item.product },
           { $inc: { stock: -item.quantity } },
         ),
       );
 
-      // Calculate total amount
       totalAmount += product.price * item.quantity;
     }
 
-    // Update product stocks
+
     await Promise.all(productUpdates);
 
-    // Get next order ID
-    const lastOrder = await this.orderModel.findOne().sort({ id: -1 });
-    const nextId = (lastOrder?.id || 0) + 1;
 
-    // Create new order
     const newOrder = new this.orderModel({
-      id: nextId,
       ...createOrderDto,
       totalAmount,
       status: createOrderDto.status || 'pending',
@@ -106,7 +98,8 @@ export class OrderService {
     return await newOrder.save();
   }
 
-  // Update order status
+
+
   async updateStatus(id: number, status: string): Promise<Order> {
     const order = await this.orderModel.findOne({ id });
 
@@ -114,13 +107,13 @@ export class OrderService {
       throw new NotFoundException(`Order with ID ${id} not found`);
     }
 
-    // Validate status transition
+
     const validStatuses = ['pending', 'completed', 'cancelled'];
     if (!validStatuses.includes(status)) {
       throw new BadRequestException('Invalid status');
     }
 
-    // Prevent updating completed or cancelled orders
+
     if (order.status === 'completed' || order.status === 'cancelled') {
       throw new BadRequestException('Cannot update completed or cancelled orders');
     }
@@ -129,7 +122,7 @@ export class OrderService {
     return await order.save();
   }
 
-  // Cancel order
+
   async cancelOrder(id: number): Promise<Order> {
     const order = await this.orderModel.findOne({ id });
 
@@ -141,7 +134,7 @@ export class OrderService {
       throw new BadRequestException('Can only cancel pending orders');
     }
 
-    // Restore product quantities
+
     const productUpdates = order.products.map((item) =>
       this.productModel.updateOne(
         { id: item.product['id'] },
@@ -155,7 +148,7 @@ export class OrderService {
     return await order.save();
   }
 
-  // Delete order
+
   async remove(id: number): Promise<void> {
     const order = await this.orderModel.findOne({ id });
 
@@ -164,7 +157,7 @@ export class OrderService {
     }
 
     if (order.status === 'pending') {
-      // Restore product quantities for pending orders
+
       const productUpdates = order.products.map((item) =>
         this.productModel.updateOne(
           { id: item.product['id'] },
