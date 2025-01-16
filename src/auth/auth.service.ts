@@ -10,12 +10,12 @@ import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class AuthService {
-  private tokenBlacklist: Set<string>; // Bộ nhớ tạm cho danh sách đen token
+  private tokenBlacklist: Set<string>; 
 
   constructor(
     @InjectModel(UserAccount.name) private userAccountModel: Model<UserAccount>,
   ) {
-    this.tokenBlacklist = new Set(); // Khởi tạo danh sách đen token
+    this.tokenBlacklist = new Set(); 
   }
 
   async register(createDto: CreateAuthDto): Promise<Omit<UserAccount, 'password'>> {
@@ -52,7 +52,7 @@ export class AuthService {
       isActive: true,
       role: 'customer',
     };
-    delete userData.repassword; // Xóa repassword trước khi lưu
+    delete userData.repassword; 
 
     
     const newUser = new this.userAccountModel(userData);
@@ -91,13 +91,13 @@ export class AuthService {
   }
 
   async logout(token: string): Promise<void> {
-    // Thêm token vào danh sách đen
+    
     this.tokenBlacklist.add(token);
 
-    // Xóa token sau 24 giờ (hoặc thời hạn token)
+    
     setTimeout(() => {
       this.tokenBlacklist.delete(token);
-    }, 24 * 60 * 60 * 1000); // 24 giờ
+    }, 24 * 60 * 60 * 1000); 
   }
 
   isTokenBlacklisted(token: string): boolean {
@@ -148,7 +148,7 @@ export class AuthService {
       updateUserDto: UpdateAuthDto,
       currentUserId: number
   ): Promise<Omit<UserAccount, 'password'>> {
-      // Kiểm tra người dùng có đang cập nhật profile của chính họ
+     
       if (userId !== currentUserId) {
           throw new UnauthorizedException('You can only update your own profile');
       }
@@ -158,7 +158,7 @@ export class AuthService {
           throw new NotFoundException(`User with ID ${userId} not found`);
       }
   
-      // Kiểm tra email có bị trùng không nếu email được cập nhật
+     
       if (updateUserDto.email) {
           const existingUser = await this.userAccountModel.findOne({
               email: updateUserDto.email,
@@ -169,7 +169,7 @@ export class AuthService {
           }
       }
   
-      // Hash password nếu password được cập nhật
+     
       if (updateUserDto.password) {
           if (updateUserDto.password !== updateUserDto.repassword) {
               throw new BadRequestException('Passwords do not match');
@@ -188,7 +188,7 @@ export class AuthService {
           )
           .exec();
   
-      // Loại bỏ password trước khi trả về
+    
       const response = updatedUser.toObject();
       delete response.password;
       return response;

@@ -1,16 +1,18 @@
-import { Controller, Post, Body, BadRequestException, Headers, UseGuards, Get, Param, Request, Patch, Delete } from '@nestjs/common';
+import { Controller, Post, Body, BadRequestException, Headers, UseGuards, Get, Param, Request, Patch, Delete, Logger } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { LoginDto } from './dto/login.dto';
 import { AdminGuard } from 'src/guard/admin.guard';
 import { AuthGuard } from 'src/guard/auth.guard';
 import { UpdateAuthDto } from './dto/update-auth.dto';
+
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
+  
   @Post('register')
   async register(@Body() createAuthDto: CreateAuthDto) {
+  
     try {
       const newUser = await this.authService.register(createAuthDto);
       return {
@@ -149,7 +151,7 @@ export class AuthController {
       });
     }
   }
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, AdminGuard)
     @Delete('delete/:id')
     async remove(@Param('id') id: string, @Request() req) {
       try {

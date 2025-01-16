@@ -1,0 +1,1247 @@
+openapi: 3.0.0
+info:
+  title: Store_Manage API
+  description: API for managing a store's products, orders, and users.
+  version: 1.0.0
+tags:
+  - name: auth
+    description: Operations related to user authentication and account management
+  - name: product
+    description: Operations related to products
+  - name: order
+    description: Operations related to orders
+  - name: personal-info
+    description: Operations related to personal information management
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      operationId: registerUser
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 1
+                email:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  example: Password123!
+                repassword:
+                  type: string
+                  example: Password123!
+      responses:
+        200:
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User registered successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      email:
+                        type: string
+                        example: user@example.com
+                      isActive:
+                        type: boolean
+                        example: true
+                      role:
+                        type: string
+                        example: customer
+                      _id: 
+                        type: string
+                        example: 1234567890abcdef
+                      createdAt: 
+                        type: string
+                        format: date-time
+                        example: "2025-01-16T08:30:00Z"
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        example: "2025-01-16T08:30:00Z"
+        400:
+          description: Bad request due to invalid data
+
+  /auth/login:
+    post:
+      summary: Login a user
+      operationId: loginUser
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  example: Password123!
+      responses:
+        200:
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: LOGIN
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        example: abcdef1234567890
+        400:
+          description: Bad request due to invalid credentials
+
+  /auth/logout:
+    post:
+      summary: Logout a user
+      operationId: logoutUser
+      security:
+        - bearerAuth: []
+      tags:
+        - auth
+      parameters:
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string
+      responses:
+        200:
+          description: Successfully logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: LOGOUT
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Logged out successfully
+        400:
+          description: Bad request due to missing authorization token
+
+  /auth/ban/{userId}:
+    post:
+      summary: Ban a user (Admin only)
+      operationId: banUser
+      security:
+        - bearerAuth: []
+      tags:
+        - auth
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string
+      responses:
+        200:
+          description: User banned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User banned successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      isActive:
+                        type: boolean
+                        example: false
+        400:
+          description: Bad request due to invalid user ID or role
+
+  /auth/unban/{userId}:
+    post:
+      summary: Unban a user (Admin only)
+      operationId: unbanUser
+      security:
+        - bearerAuth: []
+      tags:
+        - auth
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string
+      responses:
+        200:
+          description: User unbanned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User unbanned successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      isActive:
+                        type: boolean
+                        example: true
+        400:
+          description: Bad request due to invalid user ID
+
+  /auth/user-status/{userId}:
+    get:
+      summary: Get user status (Admin only)
+      operationId: getUserStatus
+      security:
+        - bearerAuth: []
+      tags:
+        - auth
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string
+      responses:
+        200:
+          description: Successfully retrieved user status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      isActive:
+                        type: boolean
+                        example: true
+        400:
+          description: Bad request due to invalid user ID
+
+  /auth/update/{id}:
+    patch:
+      summary: Update user details
+      operationId: updateUser
+      security:
+        - bearerAuth: []
+      tags:
+        - auth
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "1"
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: newuser@example.com
+                password:
+                  type: string
+                  example: NewPassword123!
+                repassword:
+                  type: string
+                  example: NewPassword123!
+      responses:
+        200:
+          description: User details updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: UPDATE
+                  data:
+                    type: object
+                    properties:
+                      email:
+                        type: string
+                        example: newuser@example.com
+        400:
+          description: Bad request due to invalid data or password mismatch
+
+  /auth/delete/{id}:
+    delete:
+      summary: Delete a user (Admin only)
+      operationId: deleteUser
+      security:
+        - bearerAuth: [] 
+      tags:
+        - auth
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "1"
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string
+      responses:
+        200:
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: DELETE
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: User with ID 1 deleted successfully
+        400:
+          description: Bad request due to invalid user ID or unauthorized action
+
+  /products/create:
+    post:
+      summary: Create a new product (Admin only)
+      operationId: createProduct
+      security:
+        - bearerAuth: [] 
+      tags:
+        - product
+      parameters:
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 1
+                name:
+                  type: string
+                  example: Product Name
+                price:
+                  type: number
+                  example: 100
+                description:
+                  type: string
+                  example: This is a great product.
+                category:
+                  type: string
+                  example: Electronics
+                stock:
+                  type: number
+                  example: 50
+                isActive:
+                  type: boolean
+                  example: true
+      responses:
+        200:
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: CREATE
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: Product Name
+                      price:
+                        type: number
+                        example: 100
+                      description:
+                        type: string
+                        example: This is a great product.
+                      category:
+                        type: string
+                        example: Electronics
+                      stock:
+                        type: number
+                        example: 50
+                      isActive:
+                        type: boolean
+                        example: true
+        400:
+          description: Bad request due to invalid data
+
+  /products/list:
+    get:
+      summary: Get a list of products with pagination
+      operationId: listProducts
+      tags:
+        - product
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: number
+            example: 1
+        - in: query
+          name: limit
+          required: true
+          schema:
+            type: number
+            example: 10
+      responses:
+        200:
+          description: List of products
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: GET_ALL
+                  total:
+                   type: integer
+                   example: 100
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: Product Name
+                        price:
+                          type: number
+                          example: 100
+                        description:
+                          type: string
+                          example: This is a great product.
+                        category:
+                          type: string
+                          example: Electronics
+                        stock:
+                          type: number
+                          example: 50
+                        isActive:
+                          type: boolean
+                          example: true
+            
+        400:
+          description: Bad request due to invalid parameters
+
+  /products/detail/{id}:
+    get:
+      summary: Get product details by ID
+      operationId: getProductDetail
+      tags:
+        - product
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        200:
+          description: Product details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: GET_ONE
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: Product Name
+                      price:
+                        type: number
+                        example: 100
+                      description:
+                        type: string
+                        example: This is a great product.
+                      category:
+                        type: string
+                        example: Electronics
+                      stock:
+                        type: number
+                        example: 50
+                      isActive:
+                        type: boolean
+                        example: true
+        400:
+          description: Bad request due to invalid ID
+
+  /products/update/{id}:
+    post:
+      summary: Update product details by ID (admin only)
+      operationId: updateProduct
+      security:
+        - bearerAuth: [] 
+      tags:
+        - product
+      
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+          
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Updated Product Name
+                price:
+                  type: number
+                  example: 150
+                description:
+                  type: string
+                  example: This is an updated product description.
+                category:
+                  type: string
+                  example: Electronics
+                stock:
+                  type: number
+                  example: 60
+                isActive:
+                  type: boolean
+                  example: true
+      responses:
+        200:
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: UPDATE
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: Updated Product Name
+                      price:
+                        type: number
+                        example: 150
+                      description:
+                        type: string
+                        example: This is an updated product description.
+                      category:
+                        type: string
+                        example: Electronics
+                      stock:
+                        type: number
+                        example: 60
+                      isActive:
+                        type: boolean
+                        example: true
+        400:
+          description: Bad request due to invalid data
+
+  /products/delete/{id}:
+    delete:
+      summary: Delete product by ID (Admin only)
+      operationId: deleteProduct
+      security:
+        - bearerAuth: [] 
+      tags:
+        - product
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string   
+      responses:
+        200:
+          description: Product deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: DELETE
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Product with ID 1 deleted successfully
+        400:
+          description: Bad request due to invalid ID or unauthorized action
+  /orders/create:
+    post:
+      summary: Create a new order
+      operationId: createOrder
+      tags:
+        - order
+      parameters:
+        
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string     
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user:
+                  type: string
+                  description: MongoDB ID of the user
+                  example: "507f1f77bcf86cd799439011"
+                products:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      product:
+                        type: string
+                        description: MongoDB ID of the product
+                        example: "507f1f77bcf86cd799439012"
+                      quantity:
+                        type: number
+                        minimum: 1
+                        example: 2
+                status:
+                  type: string
+                  enum: [pending, completed, cancelled]
+                  example: "pending"
+                id:
+                  type: number
+                  example: 1
+      responses:
+        200:
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: "CREATE"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                        example: 1
+                      user:
+                        type: string
+                        example: "507f1f77bcf86cd799439011"
+                      products:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            product:
+                              type: string
+                              example: "507f1f77bcf86cd799439012"
+                            quantity:
+                              type: number
+                              example: 2
+                      status:
+                        type: string
+                        example: "pending"
+                      totalAmount:
+                        type: number
+                        example: 200
+                      orderDate:
+                        type: string
+                        format: date-time
+                        example: "2025-01-16T10:00:00Z"
+        400:
+          description: Bad request due to invalid data
+
+  /orders/list:
+    get:
+      summary: Get all orders with pagination (Admin only)
+      operationId: listOrders
+      tags:
+        - order
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          required: true
+          schema:
+            type: number
+            example: 1
+        - in: query
+          name: limit
+          required: true
+          schema:
+            type: number
+            example: 10
+        
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string       
+      responses:
+        200:
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: "GET_ALL"
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: number
+                        user:
+                          type: string
+                        products:
+                          type: array
+                          items:
+                            type: object
+                        status:
+                          type: string
+                        totalAmount:
+                          type: number
+                        orderDate:
+                          type: string
+                          format: date-time
+        400:
+          description: Bad request due to missing pagination parameters
+
+  /orders/detail/{id}:
+    get:
+      summary: Get order details by ID
+      operationId: getOrderDetail
+      tags:
+        - order
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "1"
+        
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string      
+      responses:
+        200:
+          description: Order details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: "GET_ONE"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      user:
+                        type: string
+                      products:
+                        type: array
+                        items:
+                          type: object
+                      status:
+                        type: string
+                      totalAmount:
+                        type: number
+                      orderDate:
+                        type: string
+                        format: date-time
+        400:
+          description: Bad request due to invalid ID
+
+  /orders/status/{id}:
+    post:
+      summary: Update order status (Admin only)
+      operationId: updateOrderStatus
+      tags:
+        - order
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "1"
+        
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string       
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [pending, completed, cancelled]
+                  example: "completed"
+      responses:
+        200:
+          description: Order status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: "UPDATE_STATUS"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      status:
+                        type: string
+        400:
+          description: Bad request due to invalid status
+
+  /orders/cancel/{id}:
+    post:
+      summary: Cancel an order
+      operationId: cancelOrder
+      tags:
+        - order
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "1"
+        
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string       
+      responses:
+        200:
+          description: Order cancelled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: "CANCEL"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: number
+                      status:
+                        type: string
+                        example: "cancelled"
+        400:
+          description: Bad request due to invalid ID
+
+  /orders/delete/{id}:
+    delete:
+      summary: Delete an order (Admin only)
+      operationId: deleteOrder
+      tags:
+        - order
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: "1"
+        
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string       
+      responses:
+        200:
+          description: Order deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: "DELETE"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Order with ID 1 deleted successfully"
+        400:
+          description: Bad request due to invalid ID
+
+  /customers/list:
+    get:
+      tags:
+        - personalinfo
+      summary: Retrieve the list of all customers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Page number
+          example: 1
+        - name: limit
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: Number of items per page
+          example: 10
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string       
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: GET_ALL
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 101
+                        fullName:
+                          type: string
+                          example: John Doe
+                        phoneNumber:
+                          type: string
+                          example: "+123456789"
+                        dateOfBirth:
+                          type: string
+                          example: "1990-01-01"
+                        addressLine:
+                          type: string
+                          example: "123 Main St, City, Country"
+        '400':
+          description: Bad Request
+
+  /customers/update-personal-info/{userId}:
+    patch:
+      tags:
+        - personalinfo
+      summary: Update personal information of a customer
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID
+          example: 609b123e4d8f2c3a45678901
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string         
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  description: ID of the customer (required)
+                  example: 101
+                fullName:
+                  type: string
+                  description: Full name of the customer (required)
+                  example: John Doe
+                phoneNumber:
+                  type: string
+                  description: Phone number of the customer (optional)
+                  example: "+123456789"
+                dateOfBirth:
+                  type: string
+                  format: date
+                  description: Date of birth of the customer (optional)
+                  example: "1990-01-01"
+                addressLine:
+                  type: string
+                  description: Address of the customer (optional)
+                  example: "123 Main St, City, Country"
+              required:
+                - id
+                - fullName
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: UPDATE_PERSONAL_INFO
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 101
+                      fullName:
+                        type: string
+                        example: John Doe
+                      phoneNumber:
+                        type: string
+                        example: "+123456789"
+                      dateOfBirth:
+                        type: string
+                        example: "1990-01-01"
+                      addressLine:
+                        type: string
+                        example: "123 Main St, City, Country"
+        '400':
+          description: Bad Request
+
+  /customers/detail/{id}:
+    get:
+      tags:
+        - personalinfo
+      summary: Retrieve detailed information of a customer
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Customer ID
+          example: 101
+        - in: header
+          name: authorization
+          required: true
+          schema:
+            type: string
+            example: Bearer token_string         
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  method:
+                    type: string
+                    example: GET_ONE
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 101
+                      fullName:
+                        type: string
+                        example: John Doe
+                      phoneNumber:
+                        type: string
+                        example: "+123456789"
+                      dateOfBirth:
+                        type: string
+                        example: "1990-01-01"
+                      addressLine:
+                        type: string
+                        example: "123 Main St, City, Country"
+        '400':
+          description: Bad Request
+   
