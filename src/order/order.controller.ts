@@ -12,7 +12,7 @@ import {
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { AuthGuard } from 'src/guard/auth.guard';
-
+import { AdminGuard } from 'src/guard/admin.guard';
 @Controller('orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
@@ -36,7 +36,7 @@ export class OrderController {
       });
     }
   }
-
+  @UseGuards(AuthGuard, AdminGuard)
   @Get('list')
   async findAll(@Query('page') page: number, @Query('limit') limit: number) {
     try {
@@ -58,7 +58,7 @@ export class OrderController {
       });
     }
   }
-
+  @UseGuards(AuthGuard)
   @Get('detail/:id')
   async findOne(@Param('id') id: string) {
     try {
@@ -78,7 +78,7 @@ export class OrderController {
     }
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, AdminGuard)
   @Post('status/:id')
   async updateStatus(
     @Param('id') id: string,
@@ -121,7 +121,7 @@ export class OrderController {
     }
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, AdminGuard)
   @Delete('delete/:id')
   async remove(@Param('id') id: string) {
     try {
